@@ -1,0 +1,83 @@
+@fwBolder: 800;
+@fwBold: 600;
+@fwNormal: 400;
+@fwLight: 300;
+@fwLighter: 200;
+
+@fsHuge: 0.5rem;
+@fsLarge: 0.4rem;
+@fsMedium: 0.3rem;
+@fsSmall: 0.2rem;
+@fsMini: 0.1rem;
+
+@fs50: 50px;
+@fs40: 40px;
+@fs36: 36px;
+@fs32: 32px;
+@fs30: 30px;
+@fs28: 28px;
+@fs24: 24px;
+@fs20: 20px;
+@fs18: 18px;
+@fs16: 16px;
+@fs14: 14px;
+@fs12: 12px;
+
+@color1: #fc6619;
+@color2: #313131;
+@color3: #626262;
+@color4: #a0a0a0;
+@color5: #dcdcdc;
+@color6: #eeeeee;
+
+.clearfix() {
+	zoom: 1;
+
+	&:after {
+		content: '.';
+		display: block;
+		height: 0;
+		clear: both;
+		visibility: hidden;
+	}
+}
+
+.text-hyphens() {
+	hyphens: auto;
+	word-wrap: break-word;
+	-webkit-hyphens: auto;
+}
+
+.text-ellipsis-single() {
+	overflow: hidden;
+	word-wrap: normal;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.text-ellipsis-multi(@line) {
+	display: -webkit-box;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	-webkit-line-clamp: @line;
+	-webkit-box-orient: vertical;
+}
+
+.input-placeholder(@fontSize, @color) {
+  &::-webkit-input-placeholder {
+		font-size: @fontSize;
+		color: @color;
+  }
+  &:-ms-input-placeholder {
+		font-size: @fontSize;
+		color: @color;
+  }
+	&::-moz-placeholder {
+		font-size: @fontSize;
+		color: @color;
+  }
+	&:-moz-placeholder {
+		font-size: @fontSize;
+		color: @color;
+  }
+}

@@ -1,0 +1,201 @@
+$fwBolder: 800;
+$fwBold: 600;
+$fwNormal: 400;
+$fwLight: 300;
+$fwLighter: 200;
+
+$fsHuge: 0.5rem;
+$fsLarge: 0.4rem;
+$fsMedium: 0.3rem;
+$fsSmall: 0.2rem;
+$fsMini: 0.1rem;
+
+@mixin clearfix {
+  zoom: 1;
+
+  &:after {
+    content: '.';
+    display: block;
+    height: 0;
+    clear: both;
+    visibility: hidden;
+  }
+}
+
+// 兼容ReactNative边框样式
+@mixin border($dirs, $width, $style, $color) {
+  border: 0 $style $color;
+  @each $dir in $dirs {
+    #{border-#{$dir}-width}: $width;
+  }
+}
+
+@mixin border-mobile(
+  $dirs: bottom,
+  $color: #eee,
+  $radius: (
+    0,
+    0,
+    0,
+    0,
+  ),
+  $selector: after
+) {
+  // 单方向边框
+  @if (type-of($dirs) == string) {
+    $dirs: ($dirs);
+  }
+  @each $dir in $dirs {
+    border-#{$dir}: 1px solid $color;
+  }
+  // 判断圆角类型
+  @if (type-of($radius) == list) {
+    border-radius: nth($radius, 1) nth($radius, 2) nth($radius, 3) nth($radius, 4);
+  } @else {
+    border-radius: $radius;
+  }
+
+  @media only screen and (-webkit-min-device-pixel-ratio: 2) {
+    & {
+      position: relative;
+      // 隐藏原始边框
+      @each $dir in $dirs {
+        border-#{$dir}: none;
+      }
+    }
+
+    &:#{$selector} {
+      content: '';
+      display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 200%;
+      height: 200%;
+      padding: 1px;
+      transform: scale(0.5);
+      transform-origin: 0 0;
+      border: 0 solid $color;
+      box-sizing: border-box;
+      pointer-events: none;
+
+      @each $dir in $dirs {
+        border-#{$dir}-width: 1px;
+      }
+      // 判断圆角类型
+      @if (type-of($radius) == list) {
+        border-radius: nth($radius, 1) * 2 nth($radius, 2) * 2 nth($radius, 3) * 2 nth($radius, 4) * 2;
+      } @else {
+        border-radius: $radius * 2;
+      }
+    }
+  }
+
+  @media only screen and (-webkit-min-device-pixel-ratio: 3) {
+    &:#{$selector} {
+      width: 300%;
+      height: 300%;
+      transform: scale(0.3333);
+
+      // 判断圆角类型
+      @if (type-of($radius) == list) {
+        border-radius: nth($radius, 1) * 3 nth($radius, 2) * 3 nth($radius, 3) * 3 nth($radius, 4) * 3;
+      } @else {
+        border-radius: $radius * 3;
+      }
+    }
+  }
+}
+
+@mixin input-placeholder($fontSize, $color) {
+  &::-webkit-input-placeholder {
+    font-size: $fontSize;
+    color: $color;
+  }
+  &:-ms-input-placeholder {
+    font-size: $fontSize;
+    color: $color;
+  }
+  &::-moz-placeholder {
+    font-size: $fontSize;
+    color: $color;
+  }
+  &:-moz-placeholder {
+    font-size: $fontSize;
+    color: $color;
+  }
+}
+
+@mixin loading-circle($width: 1em) {
+  display: inline-block;
+  vertical-align: middle;
+  width: $width;
+  height: $width;
+  border-radius: $width;
+  border: $width / 10 solid transparent currentColor transparent transparent;
+  animation: rotate 0.5s linear infinite;
+}
+
+@mixin text-hyphens {
+  hyphens: auto;
+  word-wrap: break-word;
+  -webkit-hyphens: auto;
+}
+
+@mixin text-ellipsis($line: 1) {
+  @if $line == 1 {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  } @else {
+    display: -webkit-box;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -webkit-line-clamp: $line;
+    -webkit-box-orient: vertical;
+  }
+}
+
+@mixin text-ellipsis-single {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+@mixin text-ellipsis-multi($line) {
+  display: -webkit-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -webkit-line-clamp: $line;
+  -webkit-box-orient: vertical;
+}
+
+@mixin triangle($dir: bottom, $size: 5px, $color: rgba(0, 0, 0, 0.5)) {
+  width: 0;
+  height: 0;
+  border-style: solid;
+
+  @if ($dir == top) {
+    border-width: 0 $size $size $size;
+    border-color: transparent transparent $color transparent;
+  } @else if ($dir == left) {
+    border-width: $size $size $size 0;
+    border-color: transparent $color transparent transparent;
+  } @else if ($dir == right) {
+    border-width: $size 0 $size $size;
+    border-color: transparent transparent transparent $color;
+  } @else if ($dir == bottom) {
+    border-width: $size $size 0 $size;
+    border-color: $color transparent transparent transparent;
+  }
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
