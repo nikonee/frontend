@@ -1,4 +1,4 @@
-input[type="checkbox"] {
+input[type='checkbox'] {
   visibility: hidden;
 
   & + label {
@@ -6,7 +6,7 @@ input[type="checkbox"] {
   }
 
   & + label::before {
-    content: "\a0";
+    content: '\a0';
     display: inline-block;
     position: absolute;
     top: 50%;
@@ -21,7 +21,7 @@ input[type="checkbox"] {
   }
 
   &:checked + label::before {
-    content: "\2713";
+    content: '\2713';
     background-color: blue;
   }
 }
