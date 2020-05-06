@@ -344,6 +344,98 @@ function heapSort2(array) {
 }
 heapSort1([...randomArr])
 heapSort2([...randomArr])
+// 计数排序
+function countSort(array) {
+  console.time('countSort')
+  let len = array.length,
+    B = [],
+    C = [],
+    min = (max = array[0])
+
+  for (let i = 0; i < len; i++) {
+    min = min <= array[i] ? min : array[i]
+    max = max >= array[i] ? max : array[i]
+    C[array[i]] = C[array[i]] ? C[array[i]] + 1 : 1
+  }
+  for (let j = min; j < max; j++) {
+    C[j + 1] = (C[j + 1] || 0) + (C[j] || 0)
+  }
+  for (let k = len - 1; k >= 0; k--) {
+    B[C[array[k]] - 1] = array[k]
+    C[array[k]]--
+  }
+  console.timeEnd('countSort')
+  return B
+}
+countSort([...randomArr])
+// 桶排序
+function bucketSort(array, num) {
+  console.time('bucketSort')
+  if (array.length <= 1) return array
+  let len = array.length,
+    buckets = [],
+    result = [],
+    min = (max = array[0]),
+    regex = '/^[1-9]+[0-9]*$/',
+    space,
+    n = 0
+  num = num || (num > 1 && regex.test(num) ? num : 10)
+
+  for (let i = 1; i < len; i++) {
+    min = min <= array[i] ? min : array[i]
+    max = max >= array[i] ? max : array[i]
+  }
+  space = (max - min + 1) / num
+  for (let j = 0; j < len; j++) {
+    var index = Math.floor((array[j] - min) / space)
+    if (buckets[index]) {
+      // 非空桶，插入排序
+      let k = buckets[index].length - 1
+      while (k >= 0 && buckets[index][k] > array[j]) {
+        buckets[index][k + 1] = buckets[index][k]
+        k--
+      }
+      buckets[index][k + 1] = array[j]
+    } else {
+      // 空桶，初始化
+      buckets[index] = []
+      buckets[index].push(array[j])
+    }
+  }
+  while (n < num) {
+    result = result.concat(buckets[n])
+    n++
+  }
+  console.timeEnd('bucketSort')
+  return result
+}
+// 基数排序
+function radixSort(array, maxDigit) {
+  console.time('radixSort')
+  let mod = 10,
+    dev = 1,
+    counter = []
+  for (let i = 0; i < maxDigit; i++, dev *= 10, mod *= 10) {
+    for (let j = 0, len = array.length; j < len; j++) {
+      let bucket = parseInt((array[j] % mod) / dev)
+      if (counter[bucket] == null) {
+        counter[bucket] = []
+      }
+      counter[bucket].push(array[j])
+    }
+    let pos = 0
+    for (let j = 0, len = counter.length; j < ;len j++) {
+      let value = null
+      if (counter[j] != null) {
+        while ((value = counter[j].shift()) != null) {
+          array[pos++] = value
+        }
+      }
+    }
+  }
+  console.timeEnd('radixSort')
+  return array
+}
 
 // 单向链表反转
 function reverseLinklist(head) {
