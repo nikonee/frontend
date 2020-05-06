@@ -69,18 +69,18 @@ function bubbleSort4(arr) {
   let max = arr.length - 1
   let j
   while (min < max) {
-    for (j = min; j < max; ++j) {
+    for (j = min; j < max; j++) {
       if (arr[j] > arr[j + 1]) {
         swapItem(arr, j, j + 1)
       }
     }
-    --max
-    for (j = max; j > min; --j) {
+    max--
+    for (j = max; j > min; j--) {
       if (arr[j] < arr[j - 1]) {
         swapItem(arr, j, j - 1)
       }
     }
-    ++min
+    min++
   }
   console.timeEnd('bubbleSort4')
   // console.log(arr)
@@ -108,26 +108,75 @@ function selectSort(arr) {
 }
 selectSort([...randomArr])
 // 插入排序
-function insertSort(arr) {
-  checkArr(arr)
-  for (let i = 1; i < arr.length; i++) {
+function insertSort1(arr) {
+  console.time('insertSort1')
+  for (let i = 1, len = arr.length; i < len; i++) {
     for (let j = i - 1; j >= 0; j--) {
       if (arr[j] > arr[j + 1]) swapItem(arr, j, j + 1)
     }
   }
+  console.timeEnd('insertSort1')
+  // console.log(arr)
   return arr
 }
-// console.log(insertSort(randomArr(10)))
+function insertSort2(arr) {
+  console.time('insertSort2')
+  for (let i = 1, len = arr.length; i < len; i++) {
+    let left = 0,
+      right = i - 1,
+      temp = arr[i]
+    while (left <= right) {
+      let mid = (left + right) >> 1
+      if (arr[mid] > temp) {
+        right = mid - 1
+      } else {
+        left = mid + 1
+      }
+    }
+    for (let j = i - 1; j >= left; j--) {
+      arr[j + 1] = arr[j]
+    }
+    arr[left] = temp
+  }
+  console.timeEnd('insertSort2')
+  // console.log(arr)
+  return arr
+}
+insertSort1([...randomArr])
+insertSort2([...randomArr])
+// 希尔排序
+function shellSort(arr) {
+  console.time('shellSort')
+  let len = arr.length,
+    gap = 1,
+    temp
+  while (gap < len / 5) {
+    gap = gap * 5 + 1
+  }
+  for (gap; gap > 0; gap = Math.floor(gap / 5)) {
+    for (let i = gap; i < len; i++) {
+      temp = arr[i]
+      let j = i - gap
+      for (; j >= 0 && arr[j] > temp; j -= gap) {
+        arr[j + gap] = arr[j]
+      }
+      arr[j + gap] = temp
+    }
+  }
+  console.timeEnd('shellSort')
+  // console.log(arr)
+  return arr
+}
+shellSort([...randomArr])
 // 归并排序
-function mergeSort(array) {
-  checkArr(array)
-  const sort = (arr, left, right) => {
-    console.log(arr, left, right)
+function mergeSort1(array) {
+  console.time('mergeSort1')
+  const mergeSort = function (arr, left, right) {
     if (left === right) return
     // 位运算获取中间索引
     let mid = parseInt(left + ((right - left) >> 1))
-    sort(arr, left, mid)
-    sort(arr, mid + 1, right)
+    mergeSort(arr, left, mid)
+    mergeSort(arr, mid + 1, right)
 
     let tempArr = [],
       index = 0,
@@ -147,76 +196,154 @@ function mergeSort(array) {
     }
     return arr
   }
-  return sort(array, 0, array.length - 1)
+  mergeSort(array, 0, array.length - 1)
+  console.timeEnd('mergeSort1')
+  // console.log(array)
+  return array
+  // return mergeSort(array, 0, array.length - 1)
 }
-// console.log(mergeSort(randomArr(10)))
-// 快速排序
-function quickSort(array) {
-  checkArr(array)
-  function part(arr, left, right) {
-    let less = left - 1
-    let more = right
-    while (left < more) {
-      if (arr[left] < arr[right]) {
-        ++less
-        ++left
-      } else if (arr[left] > arr[right]) {
-        // 当前值比基准值大，将当前值和右边的值交换
-        // 并且不改变 `left`，因为当前换过来的值还没有判断过大小
-        swapItem(arr, --more, left)
+function mergeSort2(array) {
+  // console.time('mergeSort2')
+  let len = array.length
+  if (len <= 1) return array
+  let mid = len >> 1,
+    leftArr = array.slice(0, mid),
+    rightArr = array.slice(mid)
+  const mergeSort = function (left, right) {
+    let result = []
+    while (left.length && right.length) {
+      if (left[0] <= right[0]) {
+        result.push(left.shift())
       } else {
-        // 和基准值相同，只移动下标
-        ++left
+        result.push(right.shift())
       }
     }
-    swapItem(arr, right, more)
-    return [less, more]
+    while (left.length) {
+      result.push(left.shift())
+    }
+    while (right.length) {
+      result.push(right.shift())
+    }
+
+    return result
   }
-  function sort(arr, left, right) {
+  // console.timeEnd('mergeSort2')
+  // console.log(array)
+  return mergeSort(mergeSort2(leftArr), mergeSort2(rightArr))
+}
+mergeSort1([...randomArr])
+mergeSort2([...randomArr])
+// 快速排序
+function quickSort1(array) {
+  console.time('quickSort1')
+  const quickSort = function (arr, left, right) {
     if (left < right) {
-      // swapItem(arr, left, right)
-      let [less, more] = part(arr, parseInt(left + ((right - left) >> 1)), right)
-      sort(arr, left, less)
-      sort(arr, more + 1, right)
+      let i = left - 1
+      for (let j = left; j <= right; j++) {
+        if (arr[j] <= arr[right]) {
+          i++
+          swapItem(arr, i, j)
+        }
+      }
+      quickSort(arr, left, i - 1)
+      quickSort(arr, i + 1, right)
     }
     return arr
   }
-  return sort(array, 0, array.length - 1)
+  quickSort(array, 0, array.length - 1)
+  console.timeEnd('quickSort1')
+  // console.log(array)
+  return array
 }
-// console.log(quickSort(randomArr(10)))
+function quickSort2(array) {
+  console.time('quickSort2')
+  const quickSort = function (arr) {
+    if (arr.length <= 1) return arr
+    let mid = parseInt(arr.length / 2)
+    let center = arr.splice(mid, 1)[0]
+    let leftArr = [],
+      rightArr = []
+    for (let i = 0, len = arr.length; i < len; i++) {
+      if (arr[i] < center) {
+        leftArr.push(arr[i])
+      } else {
+        rightArr.push(arr[i])
+      }
+    }
+    return quickSort(leftArr).concat([center], quickSort(rightArr))
+  }
+  quickSort(array)
+  console.timeEnd('quickSort2')
+  // console.log(array)
+  return array
+}
+quickSort1([...randomArr])
+quickSort2([...randomArr])
 // 堆排序
-function heapify(arr, index, size) {
-  let left = index * 2 + 1
-  while (left < size) {
-    let larger = left + 1 < size && arr[left] < arr[left + 1] ? left + 1 : left
-    larger = arr[index] < arr[larger] ? larger : index
-    if (larger === index) break
-    swapItem(arr, index, larger)
-    index = larger
-    left = index * 2 + 1
+function heapSort1(array) {
+  console.time('heapSort1')
+  const heapify = function (arr, index, size) {
+    let left = index * 2 + 1
+    while (left < size) {
+      let larger = left + 1 < size && arr[left] < arr[left + 1] ? left + 1 : left
+      larger = arr[index] < arr[larger] ? larger : index
+      if (larger === index) break
+      swapItem(arr, index, larger)
+      index = larger
+      left = index * 2 + 1
+    }
   }
+  const heapInsert = function (arr, index) {
+    const parentIndex = (index - 1) >> 1
+    while (arr[index] > arr[parentIndex]) {
+      swapItem(arr, index, parentIndex)
+      index = parentIndex
+    }
+  }
+  let len = array.length
+  for (let i = 0; i < len; i++) {
+    heapInsert(array, i)
+  }
+  swapItem(array, 0, --len)
+  while (len > 0) {
+    heapify(array, 0, len)
+    swapItem(array, 0, --len)
+  }
+  console.timeEnd('heapSort1')
+  // console.log(array)
+  return array
 }
-function heapInsert(arr, index) {
-  const parentIndex = parseInt((index - 1) / 2)
-  while (arr[index] > arr[parentIndex]) {
-    swapItem(arr, index, parentIndex)
-    index = parentIndex
+function heapSort2(array) {
+  console.time('heapSort2')
+  const heapify = function (arr, index, size) {
+    var left = 2 * index + 1,
+      right = 2 * index + 2,
+      larger = index
+    if (left < size && arr[left] > arr[larger]) {
+      larger = left
+    }
+    if (right < size && arr[right] > arr[larger]) {
+      larger = right
+    }
+    if (larger != index) {
+      swapItem(arr, index, larger)
+      heapify(arr, larger, size)
+    }
   }
+  let len = array.length
+  for (let i = parseInt(len / 2) - 1; i >= 0; i--) {
+    heapify(array, i, len)
+  }
+  for (let j = len - 1; j >= 1; j--) {
+    swapItem(array, 0, j)
+    heapify(array, 0, --len)
+  }
+  console.timeEnd('heapSort2')
+  // console.log(array);
+  return array
 }
-function heapSort(arr) {
-  checkArr(arr)
-  for (let i = 0; i < arr.length; i++) {
-    heapInsert(arr, i)
-  }
-  let size = arr.length
-  swapItem(arr, 0, --size)
-  while (size > 0) {
-    heapify(arr, 0, size)
-    swapItem(arr, 0, --size)
-  }
-  return arr
-}
-// console.log(heapSort(randomArr(10)));
+heapSort1([...randomArr])
+heapSort2([...randomArr])
 
 // 单向链表反转
 function reverseLinklist(head) {
