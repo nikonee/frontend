@@ -1,3 +1,4 @@
+// 循环队列
 class CycleQueue {
   constructor(len) {
     this.queue = new Array(len + 1)
@@ -48,8 +49,7 @@ class CycleQueue {
   }
 }
 
-// let queue = new CycleQueue(10)
-
+// 字典树
 class TrieNode {
   constructor() {
     this.path = 0
@@ -57,7 +57,6 @@ class TrieNode {
     this.next = new Array(26).fill(null)
   }
 }
-
 class Trie {
   constructor() {
     this.root = new TrieNode()
@@ -104,6 +103,7 @@ class Trie {
   }
 }
 
+// 并查集
 class DisjointSet {
   constructor(count) {
     this.parent = new Array(count)
@@ -136,6 +136,7 @@ class DisjointSet {
   }
 }
 
+// 二叉堆-大根堆
 class MaxHeap {
   constructor() {
     this.heap = []

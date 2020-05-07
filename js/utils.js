@@ -1,3 +1,13 @@
+// Array
+const all = (arr, fn = Boolean) => arr.every(fn)
+
+const allEqual = (arr) => arr.every((v) => v === arr[0])
+
+const any = (arr, fn = Boolean) => any.some(fn)
+// 二维数组转换为逗号分隔CSV字符串
+const arrToCSV = (arr, sep = ',') =>
+  arr.map((v) => v.map((x) => (isNaN(x) ? `"${x.replace(/"/g, '""')}"` : x)).join(sep)).join('\n')
+
 /**
  * Animate动画回调
  *
