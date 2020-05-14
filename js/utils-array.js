@@ -24,7 +24,14 @@ const anyTruthy = (arr, func = Boolean) => any.some(func)
 const arrToCSV = (arr, sep = ',') =>
   arr.map((el) => el.map((x) => (isNaN(x) ? `"${x.replace(/"/g, '""')}"` : x)).join(sep)).join('\n')
 /**
- * 将数组划分为指定个数小数组;
+ * 将指定的可迭代类数组对象转化为以参考值作为key的哈希对象；
+ * @param {*} arr
+ * @param {*} key
+ */
+const arrToHash = (arr, key) =>
+  Array.prototype.reduce.call(arr, (acc, el, i) => ((acc[!key ? i : el[key]] = el), acc), {})
+/**
+ * 将数组划分为指定个数子数组;
  * @param {*} arr
  * @param {*} num
  */
@@ -33,7 +40,7 @@ const chunkToNum = (arr, num) => {
   return Array.from({ length: num }, (el, i) => arr.slice(i * size, (i + 1) * size))
 }
 /**
- * 将数组划分为指定长度小数组;
+ * 将数组划分为指定长度子数组;
  * @param {*} arr
  * @param {*} size
  */
@@ -55,7 +62,7 @@ const countByFunc = (arr, func) =>
  */
 const countByTimes = (arr, val) => arr.reduce((acc, el) => (el === val ? a + 1 : a), 0)
 /**
- * 获取两个数组中不同的元素;
+ * 获取两个数组中的差异元素;
  * @param {*} arr1
  * @param {*} arr2
  */
@@ -65,7 +72,7 @@ const difference = (arr1, arr2) => {
   return arr.filter((el) => !set.has(el))
 }
 /**
- * 获取指定函数处理后两个数组中不同的元素;
+ * 获取指定函数处理后两个数组中的差异元素;
  * @param {*} arr1
  * @param {*} arr2
  * @param {*} func
@@ -75,21 +82,43 @@ const diffByFunc = (arr1, arr2, func) => {
   return arr1.map(func).filter((el) => !set.has(el))
 }
 /**
- * 获取两个数组中不满足条件函数的元素;
+ * 获取两个数组中不满足比较函数的差异元素;
  * @param {*} arr1
  * @param {*} arr2
  * @param {*} func
  */
 const diffWithFunc = (arr1, arr2, func) => arr1.filter((a) => arr2.findIndex((b) => func(a, b)) === -1)
 /**
- * 获取两个数组中不同的元素,返回一个新数组;
- * @param {*} arr1 
- * @param {*} arr2 
+ * 获取两个数组中的对称差异元素;
+ * @param {*} arr1
+ * @param {*} arr2
  */
 const diffSymmetric = (arr1, arr2) => {
-  const set1 = new Set(arr1), set2 = new Set(arr2)
-  return [...arr1.filter(el => !set2.has(el)), ...arr2.filter(el => !set1.has(el)]
+  const set1 = new Set(arr1),
+    set2 = new Set(arr2)
+  return [...arr1.filter((el) => !set2.has(el)), ...arr2.filter((el) => !set1.has(el))]
 }
+/**
+ * 获取指定函数处理后两个数组中的对称差异元素;
+ * @param {*} arr1
+ * @param {*} arr2
+ * @param {*} func
+ */
+const diffSymmetricByFunc = (arr1, arr2, func) => {
+  const set1 = new Set(arr1.map((el) => func(el))),
+    set2 = new Set(arr2.map((el) => func(el)))
+  return [...arr1.filter((el) => !set2.has(func(el))), ...arr2.filter((el) => !set1.has(func(el)))]
+}
+/**
+ * 获取两个数组中不满足比较函数的对称差异元素;
+ * @param {*} arr1
+ * @param {*} arr2
+ * @param {*} func
+ */
+const diffSymmetricWithFunc = (arr1, arr2, func) => [
+  ...arr1.filter((a) => arr2.findIndex((b) => func(a, b)) === -1),
+  ...arr2.filter((a) => arr1.findIndex((b) => func(a, b)) === -1),
+]
 /**
  * 在数组开头处移除指定个数元素;
  * @param {*} arr
@@ -523,7 +552,7 @@ const reduceWhich = (arr, func = (a, b) => a - b) => arr.reduce((a, b) => (func(
  * @param {*} num
  * @param  {...any} args
  */
-const shank = (arr, i, num, ...args) =>
+const shankArr = (arr, i, num, ...args) =>
   arr
     .slice(0, i)
     .concat(args)
@@ -532,7 +561,7 @@ const shank = (arr, i, num, ...args) =>
  * 随机打乱数组元素顺序;
  * @param {*} arr
  */
-const shuffle = (arr) => {
+const shuffleArr = (arr) => {
   let len = arr.length
   while (len) {
     const i = Math.floor(Math.random() * len--)
@@ -603,5 +632,110 @@ const stableSort = (arr, func = () => false) =>
     .map((item, index) => ({ item, index }))
     .sort((a, b) => func(a.item, b.item) || a.index - b.index)
     .map(({ item }) => item)
-
-
+/**
+ * 获取数组开头指定个数元素;
+ * @param {*} arr
+ * @param {*} num
+ */
+const takeLeft = (arr, num = 1) => arr.slice(0, num)
+/**
+ * 获取数组结尾指定个数元素;
+ * @param {*} arr
+ * @param {*} num
+ */
+const takeRight = (arr, num = 1) => arr.slice(arr.length - num, arr.length)
+/**
+ * 从数组开头处移除元素,直到满足条件函数时返回移除元素;
+ * @param {*} arr
+ * @param {*} func
+ */
+const takeLeftWhile = (arr, func) => {
+  for (const [i, el] of arr.entries()) {
+    if (func(el)) return arr.slice(0, i)
+  }
+  return arr
+}
+/**
+ * 从数组结尾处移除元素,直到满足条件函数时返回移除元素;
+ * @param {*} arr
+ * @param {*} func
+ */
+const takeRightWhile = (arr, func) => arr.reduce((acc, el) => (func(el) ? acc : [el, ...acc]), [])
+/**
+ * 获取两个数组中每个存在的元素;
+ * @param {*} arr1
+ * @param {*} arr2
+ */
+const unionArr = (arr1, arr2) => Array.from(new Set([...arr1, ...arr2]))
+/**
+ * 获取经过指定函数处理后两个数组中每个元素;
+ * @param {*} arr1
+ * @param {*} arr2
+ * @param {*} func
+ */
+const unionByFunc = (arr1, arr2, func) => {
+  const set = new Set(arr1.map(func))
+  return Array.from(new Set([...arr1, ...arr2.filter((el) => !set.has(func(el)))]))
+}
+/**
+ * 获取两个数组中每个满足比较函数的元素;
+ * @param {*} arr1
+ * @param {*} arr2
+ * @param {*} func
+ */
+const unionWithFunc = (arr1, arr2, func) =>
+  Array.from(new Set([...arr1, ...arr2.filter((a) => arr1.findIndex((b) => func(a, b)) === -1)]))
+// console.log(unionWithFunc([1, 1.2, 1.5, 3, 0], [1.9, 3, 0, 3.9], (a, b) => Math.round(a) === Math.round(b)))
+/**
+ * 从头开始获取数组中满足条件函数的唯一元素;
+ * @param {*} arr
+ * @param {*} func
+ */
+const uniqueItemsLeft = (arr, func) => arr.reduce((acc, el) => (!acc.some((x) => func(el, x)) && acc.push(el), acc), [])
+/**
+ * 从尾开始获取数组中满足条件函数的唯一元素;
+ * @param {*} arr
+ * @param {*} func
+ */
+const uniqueItemsRight = (arr, func) =>
+  arr.reduceRight((acc, el) => (!acc.some((v) => func(el, v)) && acc.push(el), acc), [])
+/**
+ * 获取两个数组中唯一的对称差异元素;
+ * @param {*} arr1
+ * @param {*} arr2
+ */
+const uniqueItemsSymmetric = (arr1, arr2) => [
+  ...new Set([...arr1.filter((el) => !arr2.includes(el)), ...arr2.filter((el) => !arr1.includes(el))]),
+]
+/**
+ * 将数组中的元素解构重新分组为多维数组;
+ * @param {*} arr
+ */
+const unzipArr = (arr) =>
+  arr.reduce(
+    (acc, el) => (el.forEach((v, i) => acc[i].push(v)), acc),
+    Array.from({ length: Math.max(...arr.map((el) => el.length)) }).map(() => [])
+  )
+// console.log(unzipArr([['a', 1, true], ['b', 2, false]]));
+/**
+ * 通过指定函数将数组中的元素解构重新分组;
+ * @param {*} arr
+ */
+const unzipWith = (arr, func) =>
+  arr
+    .reduce(
+      (acc, el) => (el.forEach((v, i) => acc[i].push(v)), acc),
+      Array.from({
+        length: Math.max(...arr.map((el) => el.length)),
+      }).map(() => [])
+    )
+    .map((el) => func(...el))
+console.log(
+  unzipWith(
+    [
+      [1, 10, 100],
+      [2, 20, 200],
+    ],
+    (...args) => args.reduce((acc, v) => acc + v, 0)
+  )
+)
