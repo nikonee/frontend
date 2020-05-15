@@ -1,4 +1,3 @@
-// --------------------Array--------------------
 /**
  * 判断数组中所有元素是否都相等;
  * @param {*} arr
@@ -453,7 +452,6 @@ const jsonToCSV = (arr, cols, sep = ',') =>
     cols.join(sep),
     ...arr.map((el) => cols.reduce((acc, key) => `${acc}${!acc.length ? '' : sep}"${!el[key] ? '' : el[key]}"`, '')),
   ].join('\n')
-
 /**
  * 获取传入的可迭代对象中最长的对象;
  * @param  {...any} args
@@ -513,6 +511,13 @@ const permutation = (arr) => {
     )
   }
 }
+/**
+ * 获取两个数组所有元素可排列出的每一对数组;
+ * @param {*} arr1
+ * @param {*} arr2
+ */
+const combination = (arr1, arr2) => arr1.reduce((acc, a) => acc.concat(arr2.map((b) => [a, b])), [])
+
 /**
  * 获取数组中随机一个元素;
  * @param {*} arr
@@ -708,34 +713,66 @@ const uniqueItemsSymmetric = (arr1, arr2) => [
   ...new Set([...arr1.filter((el) => !arr2.includes(el)), ...arr2.filter((el) => !arr1.includes(el))]),
 ]
 /**
- * 将数组中的元素解构重新分组为多维数组;
+ * 对数组中元素进行解构还原为原数组;
  * @param {*} arr
  */
 const unzipArr = (arr) =>
   arr.reduce(
     (acc, el) => (el.forEach((v, i) => acc[i].push(v)), acc),
-    Array.from({ length: Math.max(...arr.map((el) => el.length)) }).map(() => [])
+    Array.from({ length: Math.max(...arr.map((el) => el.length)) }, () => [])
   )
 // console.log(unzipArr([['a', 1, true], ['b', 2, false]]));
 /**
- * 通过指定函数将数组中的元素解构重新分组;
+ * 通过指定函数对数组中元素进行解构重新分组;
  * @param {*} arr
+ * @param {*} func
  */
 const unzipWith = (arr, func) =>
   arr
     .reduce(
       (acc, el) => (el.forEach((v, i) => acc[i].push(v)), acc),
-      Array.from({
-        length: Math.max(...arr.map((el) => el.length)),
-      }).map(() => [])
+      Array.from({ length: Math.max(...arr.map((el) => el.length)) }, () => [])
     )
     .map((el) => func(...el))
-console.log(
-  unzipWith(
-    [
-      [1, 10, 100],
-      [2, 20, 200],
-    ],
-    (...args) => args.reduce((acc, v) => acc + v, 0)
-  )
-)
+/**
+ * 根据权重值获取数组中对应位置的元素;
+ * @param {*} arr
+ * @param {*} weights
+ */
+const weightedItem = (arr, weights) => {
+  const random = Math.random()
+  const index = weights
+    .reduce((acc, el, i) => (i === 0 ? [el] : [...acc, acc[acc.length - 1] + el]), [])
+    .findIndex((el, i, s) => random >= (i === 0 ? 0 : s[i - 1]) && random < el)
+  return arr[index]
+}
+/**
+ * 根据给定参数项过滤数组元素;
+ * @param {*} arr
+ * @param  {...any} args
+ */
+const withoutItem = (arr, ...args) => arr.filter((el) => !args.includes(el))
+/**
+ * 根据数组元素对应位置对多个数组重新分组;
+ * @param  {...any} arr
+ */
+const zipArr = (...arr) => {
+  const maxLen = Math.max(...arr.map((el) => el.length))
+  return Array.from({ length: maxLen }, (_, i) => Array.from({ length: arr.length }, (_, j) => arr[j][i]))
+}
+/**
+ * 根据给定的key数组和value数组返回一个关联对象;
+ * @param {*} arr1
+ * @param {*} arr2
+ */
+const zipObj = (arr1, arr2) => arr1.reduce((obj, el, i) => ((obj[el] = arr2[i]), obj), {})
+/**
+ * 通过指定函数处理数组中对应位置元素对多个数组重新分组;
+ * @param {*} arr 
+ * @param {*} func 
+ */
+const zipWith = (arr, func) => {
+  const maxLen = Math.max(...arr.map((el) => el.length))
+  return Array.from({ length: maxLen }, (_, i) => (func ? func(...arr.map((el) => el[i])) : arr.map((el) => el[i])))
+}
+
