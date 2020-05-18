@@ -10,26 +10,6 @@ $fsMedium: 0.3rem;
 $fsSmall: 0.2rem;
 $fsMini: 0.1rem;
 
-@mixin clearfix {
-  zoom: 1;
-
-  &:after {
-    content: '.';
-    display: block;
-    height: 0;
-    clear: both;
-    visibility: hidden;
-  }
-}
-
-// 兼容ReactNative边框样式
-@mixin border($dirs, $width, $style, $color) {
-  border: 0 $style $color;
-  @each $dir in $dirs {
-    #{border-#{$dir}-width}: $width;
-  }
-}
-
 @mixin border-mobile(
   $dirs: bottom,
   $color: #eee,
@@ -107,6 +87,78 @@ $fsMini: 0.1rem;
   }
 }
 
+// 兼容ReactNative边框样式
+@mixin border-rn($dirs, $width, $style, $color) {
+  border: 0 $style $color;
+  @each $dir in $dirs {
+    #{border-#{$dir}-width}: $width;
+  }
+}
+
+@mixin clearfix {
+  zoom: 1;
+
+  &:after {
+    content: '.';
+    display: block;
+    height: 0;
+    clear: both;
+    visibility: hidden;
+  }
+}
+
+@mixin hover-underline($bgColor: blue) {
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 1px;
+    background-color: $bgColor;
+    transform: scaleX(0);
+    transform-origin: bottom right;
+    transition: transform 0.25s ease-out;
+  }
+
+  &:hover::after {
+    transform: scaleX(1);
+    transform-origin: bottom left;
+  }
+}
+
+@mixin input-checkbox {
+  &[type='checkbox'] {
+    visibility: hidden;
+
+    & + label {
+      position: relative;
+    }
+
+    & + label::before {
+      content: '\a0';
+      display: inline-block;
+      position: absolute;
+      top: 50%;
+      left: -1.5em;
+      width: 1em;
+      height: 1em;
+      margin-top: -0.5em;
+      border-radius: 0.1em;
+      border: 1px solid #eee;
+      background-color: #fff;
+      box-sizing: border-box;
+    }
+
+    &:checked + label::before {
+      content: '\2713';
+      background-color: blue;
+    }
+  }
+}
+
 @mixin input-placeholder($fontSize, $color) {
   &::-webkit-input-placeholder {
     font-size: $fontSize;
@@ -126,14 +178,103 @@ $fsMini: 0.1rem;
   }
 }
 
-@mixin loading-circle($width: 1em) {
-  display: inline-block;
-  vertical-align: middle;
+@mixin loading-circle($width: 1em, $bdColor: #aaa, $bgColor: #eee) {
   width: $width;
   height: $width;
-  border-radius: $width;
-  border: $width / 10 solid transparent currentColor transparent transparent;
-  animation: rotate 0.5s linear infinite;
+  border-radius: 50%;
+  border: $width / 10 solid $bgColor;
+  border-left-color: $bdColor;
+  animation: loading-circle 1s linear infinite;
+}
+
+@mixin loading-point($bgColor: gray) {
+  position: relative;
+  width: 1em;
+  height: 1em;
+  border-radius: 50%;
+  background: $bgColor;
+  animation: loading-point 0.6s infinite alternate;
+
+  &::before {
+    content: '';
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 1.5em;
+    width: 1em;
+    height: 1em;
+    border-radius: 50%;
+    background: $bgColor;
+    animation: loading-point 0.6s 0.2s infinite alternate;
+  }
+
+  &::after {
+    content: '';
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 3em;
+    width: 1em;
+    height: 1em;
+    border-radius: 50%;
+    background: $bgColor;
+    animation: loading-point 0.6s 0.4s infinite alternate;
+  }
+}
+
+@mixin shadow($blur: 0.5em) {
+  z-index: 1;
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: $blur;
+    width: 100%;
+    height: 100%;
+    background: inherit;
+    filter: blur($blur);
+    opacity: 0.5;
+  }
+}
+
+@mixin scrollbar($orient: 'vertical', $barWidth: 10px, $thumbColor: #aaa, $trackColor: #eee) {
+  @if $orient == 'vertical' {
+    overflow-y: scroll;
+
+    &::-webkit-scrollbar {
+      width: $barWidth;
+    }
+    &::-webkit-scrollbar-thumb {
+      border-radius: $barWidth;
+      background-color: $thumbColor;
+    }
+    &::-webkit-scrollbar-track {
+      border-radius: $barWidth;
+      background-color: $trackColor;
+    }
+  } @else {
+    overflow-x: scroll;
+
+    &::-webkit-scrollbar {
+      height: $barWidth;
+    }
+    &::-webkit-scrollbar-thumb {
+      border-radius: $barWidth;
+      background-color: $thumbColor;
+    }
+    &::-webkit-scrollbar-track {
+      border-radius: $barWidth;
+      background-color: $trackColor;
+    }
+  }
+}
+
+@mixin text-gradient($gradient: linear-gradient(0deg, red, green, blue)) {
+  font-size: 1em;
+  background: $gradient;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 @mixin text-hyphens {
@@ -191,11 +332,44 @@ $fsMini: 0.1rem;
   }
 }
 
-@keyframes rotate {
-  0% {
-    transform: rotate(0);
+@mixin triangle-top($bdWidth: 10px, $bdColor: #eee, $bgColor: #fff) {
+  position: relative;
+  background: $bgColor;
+  border: 1px solid $bdColor;
+
+  &:before {
+    content: '';
+    position: absolute;
+    left: 19px;
+    bottom: 100%;
+    border: ($bdWidth + 1px) solid transparent;
+    border-bottom-color: $bdColor;
   }
-  100% {
+
+  &:after {
+    content: '';
+    position: absolute;
+    left: 20px;
+    bottom: 100%;
+    border: $bdWidth solid transparent;
+    border-bottom-color: $bgColor;
+  }
+}
+
+@keyframes loading-circle {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes loading-point {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.3;
   }
 }
