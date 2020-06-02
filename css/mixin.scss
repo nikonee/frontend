@@ -10,6 +10,13 @@ $fsMedium: 0.3rem;
 $fsSmall: 0.2rem;
 $fsMini: 0.1rem;
 
+// CSS全局变量
+:root {
+  --bg-color: #fff;
+  --main-color: #000;
+  --minor-color: #333;
+}
+
 @mixin border-mobile(
   $dirs: bottom,
   $color: #eee,
@@ -270,7 +277,7 @@ $fsMini: 0.1rem;
   }
 }
 
-@mixin text-gradient($gradient: linear-gradient(0deg, red, green, blue)) {
+@mixin text-gradient($gradient: linear-gradient(180deg, red, green, blue)) {
   font-size: 1em;
   background: $gradient;
   -webkit-background-clip: text;
@@ -290,7 +297,6 @@ $fsMini: 0.1rem;
     text-overflow: ellipsis;
   } @else {
     display: -webkit-box;
-    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     -webkit-line-clamp: $line;
@@ -304,15 +310,24 @@ $fsMini: 0.1rem;
   text-overflow: ellipsis;
 }
 
-@mixin text-ellipsis-multi($line) {
-  display: -webkit-box;
+@mixin text-ellipsis-multi($maxHeight: 3em, $bgColor: #fff) {
+  position: relative;
   overflow: hidden;
-  text-overflow: ellipsis;
-  -webkit-line-clamp: $line;
-  -webkit-box-orient: vertical;
+  max-height: $maxHeight;
+  background-color: $bgColor;
+
+  &::after {
+    content: '...';
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 2em;
+    text-align: center;
+    background: linear-gradient(90deg, transparent, $bgColor 20%);
+  }
 }
 
-@mixin triangle($dir: bottom, $size: 5px, $color: rgba(0, 0, 0, 0.5)) {
+@mixin triangle($dir: bottom, $size: 5px, $color: black) {
   width: 0;
   height: 0;
   border-style: solid;
