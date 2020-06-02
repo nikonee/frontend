@@ -146,3 +146,88 @@ const getUrlParams = (url) =>
  * @param {*} className
  */
 const hasClass = (el, className) => el.classList.contains(className)
+/**
+ * 通过SHA-256加密生成哈希值;
+ * @param {*} val
+ */
+const hashBrowser = (val) =>
+  crypto.subtle.digest('SHA-256', new TextEncoder('utf-8').encode(val)).then((res) => {
+    const hexes = []
+    const view = new DataView(res)
+    for (let i = 0; i < view.byteLength; i += 4) {
+      hexes.push(('00000000' + view.getUint32(i).toString(16)).slice(-8))
+    }
+    return hexes.join('')
+  })
+/**
+ * 隐藏指定元素;
+ * @param  {...any} el
+ */
+const hideElements = (...el) => [...el].forEach((e) => (e.style.display = 'none'))
+/**
+ * XMLHttpRequest发送DELETE请求;
+ * @param {*} url
+ * @param {*} load
+ * @param {*} err
+ */
+const httpDelete = (url, load, err = console.error) => {
+  const xhr = new XMLHttpRequest()
+  xhr.open('DELETE', url, true)
+  xhr.onload = () => load(xhr)
+  xhr.onerror = () => err(xhr)
+  xhr.send()
+}
+/**
+ * XMLHttpRequest发送GET请求;
+ * @param {*} url
+ * @param {*} load
+ * @param {*} err
+ */
+const httpGet = (url, load, err = console.error) => {
+  const xhr = new XMLHttpRequest()
+  xhr.open('GET', url, true)
+  xhr.onload = () => load(xhr.responseText)
+  xhr.onerror = () => err(xhr)
+  xhr.send()
+}
+/**
+ * XMLHttpRequest发送POST请求;
+ * @param {*} url
+ * @param {*} load
+ * @param {*} err
+ */
+const httpPost = (url, data, load, err = console.error) => {
+  const xhr = new XMLHttpRequest()
+  xhr.open('POST', url, true)
+  xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8')
+  xhr.onload = () => load(xhr.responseText)
+  xhr.onerror = () => err(xhr)
+  xhr.send(data)
+}
+/**
+ * XMLHttpRequest发送PUT请求;
+ * @param {*} url
+ * @param {*} load
+ * @param {*} err
+ */
+const httpPut = (url, data, load, err = console.error) => {
+  const xhr = new XMLHttpRequest()
+  xhr.open('PUT', url, true)
+  xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8')
+  xhr.onload = () => load(xhr)
+  xhr.onerror = () => err(xhr)
+  xhr.send(data)
+}
+/**
+ * HTTP重定向至HTTPS;
+ */
+const httpsRedirect = () => {
+  if (location.protocol !== 'https:' location.replace('https://' + location.href.split('//')[1])
+}
+/**
+ * 在指定元素结尾处插入HTML;
+ * @param {*} el 
+ * @param {*} html 
+ */
+const insertAfter = (el, html) => el.insertAdjacentHTML('afterend', html)
+
