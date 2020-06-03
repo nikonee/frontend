@@ -153,7 +153,7 @@ const dropRightWhile = (arr, func) => {
  * @param {*} arr
  * @param {*} nth
  */
-const elementNth = (arr, nth = 0) => (nth === -1 ? arr.slice(nth) : arr.slice(nth, nth + 1))[0]
+const elNth = (arr, nth = 0) => (nth === -1 ? arr.slice(nth) : arr.slice(nth, nth + 1))[0]
 /**
  * 获取数组中指定数字倍数位置的元素;
  * @param {*} arr
@@ -229,7 +229,6 @@ const filterItemsRejected = (arr, func) => arr.filter((...args) => !func(...args
 const filterItemsResolved = (arr, func) =>
   Array.isArray(arr) ? arr.filter(func).reduce((acc, el) => (arr.splice(arr.indexOf(el), 1), acc.concat(el)), []) : []
 // console.log(filterItemsResolved([1, 2, 3, 4], (n) => n % 2 !== 0))
-
 /**
  * 通过条件函数过滤对象数组以及对象中未指定的key;
  * @param {*} arr
@@ -272,7 +271,6 @@ const findLastIndex = (arr, func) => {
     .pop()
   return res ? res[0] : -1
 }
-
 /**
  * 将数组深度降维至一维;
  * @param {*} arr
@@ -351,7 +349,6 @@ const init2DArr = (w, h, val = null) => Array.from({ length: h }, () => Array.fr
  */
 const initNDArr = (val, ...args) =>
   args.length === 0 ? val : Array.from({ length: args[0] }, () => initNDArr(val, ...args.slice(1)))
-
 /**
  * 根据指定范围值和间隔初始化数组;
  * @param {*} end
@@ -542,7 +539,7 @@ const randomSize = (arr, size = 1) => {
  * @param {*} func
  * @param {*} res
  */
-const reduceSuccessive = (arr, func, res) =>
+const reduceSuccess = (arr, func, res) =>
   arr.reduce((acc, el, i, arr) => (acc.push(func(acc.slice(-1)[0], el, i, arr)), acc), [res])
 /**
  * 根据指定函数的比较规则返回数组中最大值/最小值;
@@ -768,11 +765,106 @@ const zipArr = (...arr) => {
 const zipObj = (arr1, arr2) => arr1.reduce((obj, el, i) => ((obj[el] = arr2[i]), obj), {})
 /**
  * 通过指定函数处理数组中对应位置元素对多个数组重新分组;
- * @param {*} arr 
- * @param {*} func 
+ * @param {*} arr
+ * @param {*} func
  */
 const zipWith = (arr, func) => {
   const maxLen = Math.max(...arr.map((el) => el.length))
   return Array.from({ length: maxLen }, (_, i) => (func ? func(...arr.map((el) => el[i])) : arr.map((el) => el[i])))
 }
 
+export {
+  allEqual,
+  allTruthy,
+  anyTruthy,
+  arrToCSV,
+  arrToHash,
+  chunkToNum,
+  chunkToSize,
+  countByFunc,
+  countByTimes,
+  difference,
+  diffByFunc,
+  diffWithFunc,
+  diffSymmetric,
+  diffSymmetricByFunc,
+  diffSymmetricWithFunc,
+  dropLeft,
+  dropRight,
+  dropLeftWhile,
+  dropRightWhile,
+  elNth,
+  everyNth,
+  filterItems,
+  filterItemsAtIndex,
+  filterItemsAtValue,
+  filterItemsByFunc,
+  filterItemsRejected,
+  filterItemsResolved,
+  filterObjectsByFunc,
+  filterNonUniqueItems,
+  filterNonUniqueByFunc,
+  filterNull,
+  findLastItem,
+  findLastIndex,
+  flattenDeep,
+  flattenDepth,
+  forEachRight,
+  frequency,
+  groupBy,
+  groupByFunc,
+  groupByFuncs,
+  includesAll,
+  includesAny,
+  indexOfAll,
+  init2DArr,
+  initNDArr,
+  initArrWithRange,
+  initArrWithVal,
+  intersection,
+  intersectByFunc,
+  intersectWithFunc,
+  isContainedIn,
+  isSameWith,
+  isSorted,
+  joinWith,
+  jsonToCSV,
+  longestItem,
+  mapObject,
+  maxItems,
+  minItems,
+  mostItem,
+  moveToEnd,
+  noneTruthy,
+  permutation,
+  combination,
+  randomItem,
+  randomSize,
+  reduceSuccess,
+  reduceWhich,
+  shankArr,
+  shuffleArr,
+  similarity,
+  sortedIndex,
+  sortedIndexByFunc,
+  sortedLastIndex,
+  sortedLastIndexByFunc,
+  stableSort,
+  takeLeft,
+  takeRight,
+  takeLeftWhile,
+  takeRightWhile,
+  unionArr,
+  unionByFunc,
+  unionWithFunc,
+  uniqueItemsLeft,
+  uniqueItemsRight,
+  uniqueItemsSymmetric,
+  unzipArr,
+  unzipWith,
+  weightedItem,
+  withoutItem,
+  zipArr,
+  zipObj,
+  zipWith,
+}
