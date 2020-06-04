@@ -78,7 +78,7 @@ const createEventHub = () => ({
   },
 })
 /**
- * 通过crypto生成RFC4122版本UUID;
+ * 浏览器环境下生成随机UUID;
  */
 const createUUID = () =>
   ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, (c) =>
