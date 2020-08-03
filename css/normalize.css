@@ -162,6 +162,10 @@ img {
   border-style: none;
 }
 
+input::-ms-reveal {
+  display: none;
+}
+
 input::-webkit-file-upload-button {
   -webkit-appearance: button;
   font: inherit;

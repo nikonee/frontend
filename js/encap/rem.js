@@ -3,7 +3,7 @@
     ? (module.exports = factory())
     : typeof define === 'function' && define.amd
     ? define(factory)
-    : (global.TrackLine = factory())
+    : (global = global || self)
 })(this, function () {
   'use strict'
 
@@ -15,9 +15,6 @@
     let dom = document.getElementsByTagName('html')[0]
     dom.style.fontSize = width * ratio + 'px'
   }
-
+  window.addEventListener('resize', resetBaseFontSize)
   resetBaseFontSize()
-  window.onresize = function () {
-    resetBaseFontSize()
-  }
 })
