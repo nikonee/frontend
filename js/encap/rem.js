@@ -11,10 +11,9 @@
   const baseWidth = 1920
   function resetBaseFontSize() {
     const ratio = (baseSize / baseWidth).toFixed(2)
-    const width = document.body.clientWidth || document.documentElement.clientWidth
-    let dom = document.getElementsByTagName('html')[0]
-    dom.style.fontSize = width * ratio + 'px'
+    const width = document.documentElement.clientWidth || document.body.clientWidth
+    document.documentElement.style.fontSize = width * ratio + 'px'
   }
-  window.addEventListener('resize', resetBaseFontSize)
   resetBaseFontSize()
+  window.addEventListener('resize', resetBaseFontSize)
 })
