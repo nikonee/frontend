@@ -33,44 +33,38 @@ function animateWithDelay(node, animation, delay = 1000) {
   }, delay)
 }
 /**
- * 数组遍历-通过While优化
+ * 数组扁平化
+ *
+ * @param {*} arr
  */
-function arrayEach(array, iteratee) {
-  let index = -1
-  const length = array.length
-
-  while (++index < length) {
-    if (iteratee(array[index], index, array) === false) break
-  }
-  return array
+function arrFlatten(arr) {
+  return arr.reduce((a, b) => [...a, ...arrFlatten(b)], [])
 }
 /**
- * 深拷贝-基础版(仅支持Array/Object)
+ * 数组随机洗牌
+ *
+ * @param {*} arr
  */
-function cloneDeep(target, map = new WeakMap()) {
-  if (typeof target === 'object') {
-    const isArray = Array.isArray(target)
-    let cloneTarget = isArray ? [] : {}
-    // 通过WeakMap解决循环引用内存问题
-    if (map.get(target)) return map.get(target)
-    map.set(target, cloneTarget)
-    // 通过While优化遍历速度
-    const keys = isArray ? undefined : Object.keys(target)
-    arrayEach(keys || target, (value, key) => {
-      if (keys) key = value
-      cloneTarget[key] = cloneDeep(target[key], map)
-    })
-    return cloneTarget
-  } else {
-    return target
-  }
+function arrShuffle(arr) {
+  return arr.slice().sort(() => Math.random() - 0.5)
 }
 /**
- * 深拷贝-MessageChannel实现,不支持函数拷贝
+ * 数组元素统计
+ *
+ * @param {*} arr
+ */
+function arrStatis(arr) {
+  return arr.reduce((t, c) => {
+    t[c] = t[c] ? ++t[c] : 1
+    return t
+  }, {})
+}
+/**
+ * 深拷贝-MessageChannel版(不支持函数拷贝)
  *
  * @param {*} target
  */
-function cloneDeepWithMC(target) {
+function deepCloneWithMC(target) {
   return new Promise((resolve) => {
     const { port1, port2 } = new MessageChannel()
     port2.onmessage = (e) => resolve(e.data)
@@ -81,10 +75,24 @@ function cloneDeepWithMC(target) {
  * 生成星级评分
  *
  * @param {*} rate 评分
- * @returns
  */
 function createStarRate(rate) {
   return '★★★★★☆☆☆☆☆'.slice(5 - rate, 10 - rate)
+}
+/**
+ * 函数柯里化
+ * @param {*} func
+ */
+function curry(func) {
+  const prevArgs = [].slice.call(arguments, 1)
+  function curried() {
+    const nextArgs = [].slice.call(arguments)
+    return curry.call(null, func, [...prevArgs, ...nextArgs])
+  }
+  curried.toString = function () {
+    return func.apply(null, prevArgs)
+  }
+  return curried
 }
 /**
  * 自定义防抖函数(每次触发事件会重置计时器时间为设定延迟时间)
@@ -94,39 +102,66 @@ function createStarRate(rate) {
  * @param {boolean} [immediate=true] 是否立即执行
  */
 function debounce(func, wait = 50, immediate = true) {
-  let timer, context, args
-
+  let timer, ctx, args
   // 延迟执行函数
-  const later = setTimeout(() => {
+  const timeout = setTimeout(() => {
     timer = null
     if (!immediate) {
       // 执行函数使用之前缓存的上下文和参数
-      func.apply(context, args)
+      func.apply(ctx, args)
       // 执行完毕清除上下文和参数
-      context = args = null
+      ctx = args = null
     }
   }, wait)
-
   return (...params) => {
     if (!timer) {
       // 如果立即执行就直接调用函数,否则缓存参数和上下文
       if (immediate) {
         func.apply(this, params)
       } else {
-        context = this
+        ctx = this
         args = params
       }
     } else {
       clearTimeout(timer)
     }
-    timer = later()
+    timer = timeout()
   }
+}
+/**
+ * 深拷贝-完整版
+ * @param {*} target
+ * @param {*} weakMap
+ */
+const deepClone = (target, weakMap = new WeakMap()) => {
+  // 对于传入参数处理
+  if (typeof target !== 'object' || target === null) return target
+  // 哈希表中存在直接返回
+  if (weakMap.has(target)) return weakMap.get(target)
+  const cloneTarget = Array.isArray(target) ? [] : {}
+  weakMap.set(target, cloneTarget)
+  // 针对Symbol属性
+  const symKeys = Object.getOwnPropertySymbols(target)
+  if (symKeys.length) {
+    symKeys.forEach((symKey) => {
+      if (typeof target[symKey] === 'object' && target[symKey] !== null) {
+        cloneTarget[symKey] = deepClone(target[symKey])
+      } else {
+        cloneTarget[symKey] = target[symKey]
+      }
+    })
+  }
+  for (const i in target) {
+    if (Object.prototype.hasOwnProperty.call(target, i)) {
+      cloneTarget[i] = typeof target[i] === 'object' && target[i] !== null ? deepClone(target[i], weakMap) : target[i]
+    }
+  }
+  return cloneTarget
 }
 /**
  * 过滤XSS脚本
  *
  * @param {*} content
- * @returns
  */
 function filterXSS(content) {
   let elem = document.createElement('div')
@@ -134,14 +169,6 @@ function filterXSS(content) {
   const result = elem.innerHTML
   elem = null
   return result
-}
-/**
- * 数组降维
- *
- * @param {*} arr
- */
-function flattenArray(arr) {
-  return arr.reduce((a, b) => [...a, ...flattenArray(b)], [])
 }
 /**
  * 格式化系统时间
@@ -221,7 +248,6 @@ function formatTimeWithFormatter(time, format) {
  * 获取URL查询参数
  *
  * @param {*} url
- * @returns
  */
 function getQueryParams(url = window.location.search) {
   return new URLSearchParams(url.replace(/\?/gi, ''))
@@ -324,15 +350,7 @@ function jsonpRequest(url, name = 'jsonpCallback', callback) {
   }
   document.body.appendChild(script)
 }
-/**
- * 数组混淆
- *
- * @param {*} arr
- * @returns
- */
-function mixArray(arr) {
-  return arr.slice().sort(() => Math.random() - 0.5)
-}
+
 /**
  * 对象数据绑定和监听
  *
@@ -402,7 +420,6 @@ function parseTimeWithFormatter(time, format) {
  * 生成随机ID
  *
  * @param {*} len ID长度
- * @returns
  */
 function randomID(len) {
   return Math.random().toString(36).substr(2, len)
@@ -410,7 +427,6 @@ function randomID(len) {
 /**
  * 生成随机颜色
  *
- * @returns
  */
 function randomColor() {
   const hexColor = Math.floor(Math.random() * 0xffffff)
@@ -423,7 +439,6 @@ function randomColor() {
  *
  * @param {*} min 最小值
  * @param {*} max 最大值
- * @returns
  */
 function randomNumber(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min
@@ -436,18 +451,6 @@ function randomNumber(min, max) {
 function sleep(delay) {
   var start = new Date().getTime()
   while (new Date().getTime() - start < delay) continue
-}
-/**
- * 数组元素统计
- *
- * @param {*} arr
- * @returns
- */
-function statArray(arr) {
-  return arr.reduce((t, c) => {
-    t[c] = t[c] ? ++t[c] : 1
-    return t
-  }, {})
 }
 /**
  * 页面滚动平滑效果
@@ -538,15 +541,14 @@ function uppercaseInitial(str) {
 export {
   animateCallBack,
   animateWithDelay,
-  cloneDeep,
+  arrFlatten,
+  arrShuffle,
+  arrStatis,
   createStarRate,
-  randomID,
-  randomColor,
-  randomNumber,
   debounce,
-  cloneDeepWithMC,
+  deepClone,
+  deepCloneWithMC,
   filterXSS,
-  flattenArray,
   formatDateTime,
   formatNumberWithUnit,
   formatNumberToThousand,
@@ -559,11 +561,12 @@ export {
   isMobile,
   isWechat,
   jsonpRequest,
-  mixArray,
   observeObject,
   parseTimeWithFormatter,
+  randomID,
+  randomColor,
+  randomNumber,
   sleep,
-  statArray,
   scrollSmoothly,
   scrollAnimation,
   typeOf,
