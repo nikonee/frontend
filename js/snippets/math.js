@@ -417,7 +417,7 @@ export {
   geometricProgression,
   getELO,
   getGCD,
-  getLCM
+  getLCM,
   hammingDistance,
   inRange,
   isDivisible,
