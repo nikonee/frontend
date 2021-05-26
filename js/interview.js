@@ -10,7 +10,7 @@ Function.prototype._apply = function (ctx = window, args) {
   return func;
 };
 
-Function.prototype._call = function (ctx, ...args) {
+Function.prototype._call = function (ctx = window, ...args) {
   const isStrict = (function () {
     return this === undefined;
   })();
@@ -66,45 +66,49 @@ function lengthOfLongestSubstr(str) {
 }
 
 function debounce(func, wait = 100, immediate = true) {
-  let ctx, args, timer, result;
+  let ctx, args, timer;
   const later = () => {
     setTimeout(() => {
       timer = null;
       if (!immediate) {
-        result = func.apply(ctx, args);
+        const result = func.apply(ctx, args);
         ctx = args = null;
+        return result;
       }
     }, wait);
   };
-  return function () {
-    ctx = this;
-    args = arguments;
+  return function (...params) {
     if (timer) {
       clearTimeout(timer);
-    } else if (immediate) {
-      result = func.apply(ctx, args);
+      timer = later();
+    } else {
+      timer = later();
+      if (immediate) {
+        return func.apply(ctx, args);
+      } else {
+        ctx = this;
+        args = params;
+      }
     }
-    timer = later();
-    return result;
   };
 }
 
-function throttle(func, wait, options = { leading: true, trailing: true }) {
+function throttle(func, wait, options = {}) {
   let ctx, args, timer, result;
   let prev = 0,
     remain = 0;
   const { leading, trailing } = options;
   const later = () => {
-    prev = leading ? Date.now() : 0;
+    prev = leading === false ? 0 : Date.now();
     timer = null;
     result = func.apply(ctx, args);
-    ctx = args = null;
+    if (!timer) ctx = args = null;
   };
   return function () {
     ctx = this;
     args = arguments;
     const now = Date.now();
-    if (!prev && !leading) prev = now;
+    if (!prev && leading === false) prev = now;
     remain = wait - (now - prev);
     if (remain <= 0 || remain > wait) {
       if (timer) {
@@ -119,4 +123,47 @@ function throttle(func, wait, options = { leading: true, trailing: true }) {
     }
     return result;
   };
+}
+
+class EventBus {
+  constructor() {
+    this.events = new Map();
+  }
+  addEvent(key, func, once) {
+    let map;
+    const eventMap = this.events.get(key);
+    if (eventMap) {
+      map = eventMap;
+    } else {
+      map = new Map();
+      this.events.set(key, map);
+    }
+    map.set(func, (...args) => {
+      func(...args);
+      once && this.off(key, func);
+    });
+  }
+  on(key, func) {
+    if (!func) return;
+    this.addEvent(key, func, false);
+  }
+  off(key, func) {
+    if (func) {
+      let map = this.events.get(key);
+      if (map) map.delete(func);
+    } else {
+      this.events.delete(key);
+    }
+  }
+  once(key, func) {
+    this.addEvent(key, func, true);
+  }
+  fire(key) {
+    let map = this.events.get(key);
+    if (map) {
+      for (let [_, func] of map.entries()) {
+        func();
+      }
+    }
+  }
 }

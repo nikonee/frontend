@@ -60,24 +60,37 @@ function arrStatis(arr) {
   }, {});
 }
 /**
- * 深拷贝-MessageChannel版(不支持函数拷贝)
- *
- * @param {*} target
+ * 控制并发任务数量
+ * @param {*} limit 限制并发数
+ * @param {*} array 任务数据源
+ * @param {*} func 迭代处理函数
+ * @returns
  */
-function deepCloneWithMC(target) {
-  return new Promise((resolve) => {
-    const { port1, port2 } = new MessageChannel();
-    port2.onmessage = (e) => resolve(e.data);
-    port1.postMessage(target);
-  });
+async function asyncPool(limit, array, func) {
+  let pool = [],
+    running = [];
+  for (const item of array) {
+    const task = Promise.resolve().then(() => func(item, array));
+    pool.push(task);
+
+    if (array.length >= limit) {
+      const callback = task.then(() => running.splice(running.indexOf(callback), 1));
+      running.push(callback);
+
+      if (running.length >= limit) {
+        return Promise.race(running);
+      }
+    }
+  }
+  return Promise.all(pool);
 }
 /**
- * 生成星级评分
+ * 字符串首字母大写
  *
- * @param {*} rate 评分
+ * @param {String} str
  */
-function createStarRate(rate) {
-  return '★★★★★☆☆☆☆☆'.slice(5 - rate, 10 - rate);
+function capitalize(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
 }
 /**
  * 函数柯里化
@@ -95,27 +108,57 @@ function curryFunc(func) {
   return curried;
 }
 /**
- * 自定义防抖函数(每次触发事件会重置计时器时间为设定延迟时间)
+ * DataURL转Blob对象
+ * @param {*} dataUrl
+ * @param {*} mimeType
+ * @returns
+ */
+function dataUrlToBlob(dataUrl, mimeType) {
+  let blob = window.atob(dataUrl.split(',')[1]);
+  let u8arr = new Uint8Array(blob.length);
+  for (let i = 0; i < blob.length; i++) {
+    u8arr[i] = blob.charCodeAt(i);
+  }
+  return new Blob([u8arr], { type: mimeType });
+}
+/**
+ * DataURL转File对象
+ * @param {*} dataUrl
+ * @param {*} fileName
+ * @returns
+ */
+function dataUrlToFile(dataUrl, fileName) {
+  const [mimeStr, base64] = dataUrl.split(',');
+  let mimeType = mimeStr.match(/:(.*?);/)[1],
+    blob = window.atob(base64),
+    u8arr = new Uint8Array(blob.length);
+  for (let i = 0; i < blob.length; i++) {
+    u8arr[i] = blob.charCodeAt(i);
+  }
+  return new File([u8arr], fileName, { type: mimeType });
+}
+/**
+ * 防抖处理函数
  *
  * @param {*} func 回调函数
  * @param {number} [wait=50] 延迟执行时间
  * @param {boolean} [immediate=true] 是否立即执行
  */
-function debounce(func, wait = 50, immediate = true) {
+function debounce(func, wait = 1000, immediate = true) {
   let timer, ctx, args;
   // 延迟执行函数
   const timeout = setTimeout(() => {
     timer = null;
     if (!immediate) {
-      // 执行函数使用之前缓存的上下文和参数
+      // 执行时使用缓存的上下文和参数
       func.apply(ctx, args);
-      // 执行完毕清除上下文和参数
       ctx = args = null;
     }
   }, wait);
+  // 实际调用函数
   return (...params) => {
     if (!timer) {
-      // 如果立即执行就直接调用函数,否则缓存参数和上下文
+      // 如果立即执行直接调用函数,否则缓存上下文和参数
       if (immediate) {
         func.apply(this, params);
       } else {
@@ -125,6 +168,7 @@ function debounce(func, wait = 50, immediate = true) {
     } else {
       clearTimeout(timer);
     }
+    // 重新设定延迟执行函数
     timer = timeout();
   };
 }
@@ -134,33 +178,78 @@ function debounce(func, wait = 50, immediate = true) {
  * @param {*} weakMap
  */
 function deepClone(target, weakMap = new WeakMap()) {
-  // 对于传入参数处理
+  // 判断是否为对象类型
   if (typeof target !== 'object' || target === null) return target;
-  // 哈希表中存在直接返回
+  // 缓存中存在直接返回
   if (weakMap.has(target)) return weakMap.get(target);
-  const cloneTarget = Array.isArray(target) ? [] : {};
-  weakMap.set(target, cloneTarget);
-  // 针对Symbol属性
-  const symKeys = Object.getOwnPropertySymbols(target);
-  if (symKeys.length) {
-    symKeys.forEach((symKey) => {
-      if (typeof target[symKey] === 'object' && target[symKey] !== null) {
-        cloneTarget[symKey] = deepClone(target[symKey]);
-      } else {
-        cloneTarget[symKey] = target[symKey];
-      }
-    });
+  // 缓存循环引用对象
+  weakMap.set(
+    target,
+    Object.create(Object.getPrototypeOf(target), Object.getOwnPropertyDescriptors(target))
+  );
+  let cloneTarget;
+  if (target instanceof Array) {
+    cloneTarget = [];
+  } else if (target instanceof Function) {
+    cloneTarget = function () {
+      return target.apply(this, arguments);
+    };
+  } else if (target instanceof RegExp) {
+    cloneTarget = new RegExp(target.source, target.flags);
+  } else if (target instanceof Date) {
+    cloneTarget = new Date(target);
+  } else {
+    cloneTarget = {};
   }
-  for (const i in target) {
-    if (Object.prototype.hasOwnProperty.call(target, i)) {
-      cloneTarget[i] =
-        typeof target[i] === 'object' && target[i] !== null
-          ? deepClone(target[i], weakMap)
-          : target[i];
+  // 遍历处理拷贝对象
+  for (let key in target) {
+    if (target.hasOwnProperty(key)) {
+      cloneTarget[key] = deepClone(target[key]);
     }
   }
+  // 遍历处理Symbol属性
+  // const symKeys = Object.getOwnPropertySymbols(target);
+  // if (symKeys.length > 0) {
+  //   for (const key of symKeys) {
+  //     cloneTarget[key] = deepClone(target[key]);
+  //   }
+  // }
   return cloneTarget;
-};
+}
+/**
+ * MessageChannel深拷贝(不支持函数拷贝)
+ *
+ * @param {*} target
+ */
+function deepCloneWithMC(target) {
+  return new Promise((resolve) => {
+    const { port1, port2 } = new MessageChannel();
+    port2.onmessage = (e) => resolve(e.data);
+    port1.postMessage(target);
+  });
+}
+/**
+ * 提取日期时间
+ *
+ * @param {*} time
+ */
+function extractDateTime(time) {
+  const result = time.match(/\d{2}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
+  if (result) {
+    return result[0].replace(/T/, ' ');
+  } else {
+    return time;
+  }
+}
+/**
+ * 提取日期时间
+ *
+ * @param {*} time
+ */
+function extractDayTime(time) {
+  const res = time.match(/\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
+  return res ? res[0].replace(/T/, ' ') : time;
+}
 /**
  * 过滤XSS脚本
  *
@@ -173,53 +262,20 @@ function filterXSS(content) {
   elem = null;
   return result;
 }
-/**
- * 格式化系统时间
- *
- * @param {*} time
- */
-function formatDateTime(time) {
-  const result = time.match(/\d{2}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
-  if (result) {
-    return result[0].replace(/T/, ' ');
-  } else {
-    return time;
+function floatAddition(num1, num2) {
+  let sq1, sq2;
+  try {
+    sq1 = num1.toString().split('.')[1].length;
+  } catch (e) {
+    sq1 = 0;
   }
-}
-/**
- * 数字格式化为单位
- *
- * @param {*} num
- * @param {*} digits
- */
-function formatNumberWithUnit(num, digits) {
-  const si = [
-    { value: 1e18, symbol: 'E' },
-    { value: 1e15, symbol: 'P' },
-    { value: 1e12, symbol: 'T' },
-    { value: 1e9, symbol: 'G' },
-    { value: 1e6, symbol: 'M' },
-    { value: 1e3, symbol: 'K' },
-  ];
-  for (let i = 0; i < si.length; i++) {
-    if (num >= si[i].value) {
-      return (
-        (num / si[i].value + 0.1).toFixed(digits).replace(/\.0+$|(\.[0-9]*[1-9])0+$/, '$1') +
-        si[i].symbol
-      );
-    }
+  try {
+    sq2 = num2.toString().split('.')[1].length;
+  } catch (e) {
+    sq2 = 0;
   }
-  return num.toString();
-}
-/**
- * 数字格式化为千分位
- *
- * @param {*} num
- */
-function formatNumberToThousand(num) {
-  return num.toString().indexOf('.') !== -1
-    ? num.toLocaleString()
-    : num.toString().replace(/\B(?=(\d{3})+$)/g, ',');
+  const max = Math.pow(10, Math.max(sq1, sq2));
+  return (Math.round(num1 * max) + Math.round(num2 * max)) / max;
 }
 /**
  * 时间解析转化为指定格式
@@ -227,7 +283,7 @@ function formatNumberToThousand(num) {
  * @param {*} time 指定时间
  * @param {*} format 指定格式
  */
-function formatTimeWithFormatter(time, format) {
+function formatTime(time, format) {
   if (('' + time).length === 10) {
     time = parseInt(time) * 1000;
   } else {
@@ -247,7 +303,7 @@ function formatTimeWithFormatter(time, format) {
     return '1天前';
   }
   if (format) {
-    return parseTimeWithFormatter(time, format);
+    return parseTime(time, format);
   } else {
     return (
       date.getMonth() +
@@ -313,7 +369,7 @@ function getQueryObjectFromURL(url) {
  *
  * @param {*} obj 指定对象
  */
-function getQueryStringFromOBJ(obj) {
+function getQueryStringFromObj(obj) {
   if (!obj) return '';
   let result = Object.keys(obj).map((key) => {
     if (obj[key] === undefined) {
@@ -352,6 +408,29 @@ function isWechat() {
   return /MicroMessenger/i.test(navigator.userAgent);
 }
 /**
+ * 判断对象类型
+ * @param {*} obj
+ * @param {*} type
+ * @returns
+ */
+function isTypeOf(obj, type) {
+  return Object.prototype.toString.call(obj).slice(8, -1) === type;
+}
+/**
+ * 判断对象类型(原型链)
+ * @param {*} instance
+ * @param {*} target
+ * @returns
+ */
+function isInstanceOf(instance, target) {
+  let proto = instance.__proto__;
+  while (true) {
+    if (instance === null) return false;
+    if (proto === target.prototype) return true;
+    proto = proto.__proto__;
+  }
+}
+/**
  * JSONP请求
  *
  * @param {*} url 请求地址
@@ -368,7 +447,41 @@ function jsonpRequest(url, name = 'jsonpCallback', callback) {
   };
   document.body.appendChild(script);
 }
-
+/**
+ * 数字格式化为单位
+ *
+ * @param {*} num
+ * @param {*} digits
+ */
+function numWithUnit(num, digits) {
+  const si = [
+    { value: 1e18, symbol: 'E' },
+    { value: 1e15, symbol: 'P' },
+    { value: 1e12, symbol: 'T' },
+    { value: 1e9, symbol: 'G' },
+    { value: 1e6, symbol: 'M' },
+    { value: 1e3, symbol: 'K' },
+  ];
+  for (let i = 0; i < si.length; i++) {
+    if (num >= si[i].value) {
+      return (
+        (num / si[i].value + 0.1).toFixed(digits).replace(/\.0+$|(\.[0-9]*[1-9])0+$/, '$1') +
+        si[i].symbol
+      );
+    }
+  }
+  return num.toString();
+}
+/**
+ * 数字格式化为千分位
+ *
+ * @param {*} num
+ */
+function numToThousands(num) {
+  return num.toString().indexOf('.') !== -1
+    ? num.toLocaleString()
+    : num.toString().replace(/\B(?=(\d{3})+$)/g, ',');
+}
 /**
  * 对象数据绑定和监听
  *
@@ -395,7 +508,7 @@ function observeObject(obj, setCallback, getCallback) {
  * @param {*} time 指定时间
  * @param {*} format 指定格式
  */
-function parseTimeWithFormatter(time, format) {
+function parseTime(time, format) {
   if (arguments.length === 0) {
     return null;
   }
@@ -439,7 +552,7 @@ function parseTimeWithFormatter(time, format) {
  *
  * @param {*} len ID长度
  */
-function randomID(len) {
+function randomId(len) {
   return Math.random().toString(36).substr(2, len);
 }
 /**
@@ -458,7 +571,7 @@ function randomColor() {
  * @param {*} min 最小值
  * @param {*} max 最大值
  */
-function randomNumber(min, max) {
+function randomNum(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 /**
@@ -534,26 +647,69 @@ function scrollAnimation(selector = '.animated') {
   });
 }
 /**
- * 判断数据类型(小写)
+ * 节流处理函数
+ * @param {*} func
+ * @param {*} wait
+ * @param {*} options
+ * @returns
+ */
+function throttle(func, wait = 1000, options = {}) {
+  let ctx, args, timer, result;
+  let prev = 0,
+    remain = 0;
+  const { leading, trailing } = options;
+  const later = () => {
+    prev = leading === false ? 0 : Date.now();
+    timer = null;
+    result = func.apply(ctx, args);
+    if (!timer) ctx = args = null;
+  };
+  return function () {
+    ctx = this;
+    args = arguments;
+    const now = Date.now();
+    if (!prev && leading === false) prev = now;
+    remain = wait - (now - prev);
+    if (remain <= 0 || remain > wait) {
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+      result = func.apply(ctx, args);
+      ctx = args = null;
+      prev = now;
+    } else if (!timer && trailing) {
+      timer = setTimeout(later, remain);
+    }
+    return result;
+  };
+}
+/**
+ * 获取对象类型
  * @param {*} obj
  */
 function typeOf(obj) {
   const type =
     obj instanceof Element
       ? 'element' // 为了统一DOM节点类型输出
-      : Object.prototype.toString
-          .call(obj)
-          .replace(/\[object\s(.+)\]/, '$1')
-          .toLowerCase();
+      : Object.prototype.toString.call(obj).replace(/\[object\s(.+)\]/, '$1');
   return type;
 }
 /**
- * 字符串首字母大写
- *
- * @param {String} str
+ * URL转File对象
+ * @param {*} url
+ * @param {*} fileName
+ * @param {*} mimeType
+ * @returns
  */
-function uppercaseInitial(str) {
-  return str.charAt(0).toUpperCase() + str.slice(1);
+function urlToFile(url, fileName, mimeType) {
+  return fetch(url)
+    .then((res) => {
+      return res.arrayBuffer();
+    })
+    .then((buffer) => {
+      return new File([buffer], fileName, { type: mimeType });
+    });
 }
 
 export {
@@ -562,32 +718,40 @@ export {
   arrFlatten,
   arrShuffle,
   arrStatis,
-  createStarRate,
+  asyncPool,
   curryFunc,
+  dataUrlToBlob,
+  dataUrlToFile,
   debounce,
   deepClone,
   deepCloneWithMC,
+  extractDateTime,
+  extractDayTime,
   filterXSS,
-  formatDateTime,
-  formatNumberWithUnit,
-  formatNumberToThousand,
-  formatTimeWithFormatter,
+  floatAddition,
+  numWithUnit,
+  numToThousands,
+  formatTime,
   getQueryParams,
   getQueryObject,
   getQueryObjectFromURL,
-  getQueryStringFromOBJ,
+  getQueryStringFromObj,
   getUTF8StringLength,
   isMobile,
   isWechat,
+  isTypeOf,
+  isInstanceOf,
   jsonpRequest,
   observeObject,
-  parseTimeWithFormatter,
-  randomID,
+  parseTime,
+  randomId,
   randomColor,
-  randomNumber,
+  randomNum,
   sleep,
   scrollSmoothly,
   scrollAnimation,
+  throttle,
   typeOf,
-  uppercaseInitial,
+  capitalize,
+  urlToFile,
 };
