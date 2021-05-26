@@ -28,14 +28,13 @@
   -webkit-hyphens: auto;
 }
 
-.text-ellipsis-single() {
+.text-ellipsis(@line) when (@line = 1) {
   overflow: hidden;
   word-wrap: normal;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-
-.text-ellipsis-multi(@line) {
+.text-ellipsis(@line) when (@line > 1) {
   display: -webkit-box;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -43,21 +42,21 @@
   -webkit-box-orient: vertical;
 }
 
-.input-placeholder(@fontSize, @color) {
-  &::-webkit-input-placeholder {
-    font-size: @fontSize;
+.text-placeholder(@prefix: input, @color: #ccc, @fontSize: 16px) {
+  @{prefix}::-webkit-input-placeholder {
     color: @color;
+    font-size: @fontSize;
   }
-  &:-ms-input-placeholder {
-    font-size: @fontSize;
+  @{prefix}:-ms-input-placeholder {
     color: @color;
+    font-size: @fontSize;
   }
-  &::-moz-placeholder {
-    font-size: @fontSize;
+  @{prefix}::-moz-placeholder {
     color: @color;
+    font-size: @fontSize;
   }
-  &:-moz-placeholder {
-    font-size: @fontSize;
+  @{prefix}:-moz-placeholder {
     color: @color;
+    font-size: @fontSize;
   }
 }
